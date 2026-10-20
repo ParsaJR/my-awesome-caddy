@@ -69,7 +69,8 @@ jobs:
         run: |
           gh release create "$VERSION" dist/* \
             --title "Custom Caddy $VERSION" \
-            --notes "Custom Caddy build with Cloudflare DNS support." \
+            --notes \
+            "My Custom Caddy build, featuring Liara dns, Cloudflare dns, caddy-exec and caddy-validate-github." \
             --repo "$GITHUB_REPOSITORY" \
             || gh release upload "$VERSION" dist/* \
               --clobber --repo "$GITHUB_REPOSITORY"
