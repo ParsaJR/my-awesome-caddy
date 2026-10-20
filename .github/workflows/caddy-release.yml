@@ -37,9 +37,9 @@ jobs:
           CGO_ENABLED=0 xcaddy build "$VERSION" \
             --output "dist/caddy-${GOOS}-${GOARCH}" \
             --with github.com/caddy-dns/cloudflare \
-            --with https://github.com/caddy-dns/liara \
-            --with https://github.com/abiosoft/caddy-exec \
-            --with https://github.com/layer8co/caddy-validate-github
+            --with github.com/caddy-dns/liara \
+            --with github.com/abiosoft/caddy-exec \
+            --with github.com/layer8co/caddy-validate-github
 
           cd dist
           sha256sum "caddy-${GOOS}-${GOARCH}" \
