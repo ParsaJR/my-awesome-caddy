@@ -14,18 +14,41 @@ jobs:
       - name: Get latest Caddy version
         id: caddy
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }} 
+          
+        # the "version" variable here, is available below for later jobs.
         run: |
           VERSION=$(gh api repos/caddyserver/caddy/releases/latest --jq .tag_name)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
+          
       - uses: actions/setup-go@v7
         with:
           go-version: stable
           cache: false
 
+      - name: Download xcaddy
+        env:
+          PATTERN: "xcaddy_*_linux_amd64.tar.gz"
+          REPO: "caddyserver/xcaddy"
+        run: 
+
       - name: Install xcaddy
-        run: go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+        run: |
+          gh release download \
+          --repo "$REPO" \
+          --pattern "$PATTERN"
+
+
+          tar xvzf $PATTERN
+
+          chmod +x xcaddy
+
+
+          sudo mv xcaddy /usr/local/bin/xcaddy
+
+          
+          echo "xcaddy installed:"
+          xcaddy version
 
       - name: Build Caddy
         env:
