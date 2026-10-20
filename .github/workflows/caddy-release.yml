@@ -33,8 +33,10 @@ jobs:
         env:
           PATTERN: "xcaddy_*_linux_amd64.tar.gz"
           REPO: "caddyserver/xcaddy"
+          GH_TOKEN: ${{ github.token }}
+          
         run: 
-
+        
       - name: Install xcaddy
         run: |
           gh release download \
