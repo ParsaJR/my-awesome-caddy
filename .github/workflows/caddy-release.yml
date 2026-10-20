@@ -1,0 +1,75 @@
+name: Build My custom Caddy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Get latest Caddy version
+        id: caddy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(gh api repos/caddyserver/caddy/releases/latest --jq .tag_name)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Install xcaddy
+        run: go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+
+      - name: Build Caddy
+        env:
+          VERSION: ${{ steps.caddy.outputs.version }}
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 xcaddy build "$VERSION" \
+            --output "dist/caddy-${GOOS}-${GOARCH}" \
+            --with github.com/caddy-dns/cloudflare \
+            --with https://github.com/caddy-dns/liara \
+            --with https://github.com/abiosoft/caddy-exec \
+            --with https://github.com/layer8co/caddy-validate-github
+
+          cd dist
+          sha256sum "caddy-${GOOS}-${GOARCH}" \
+            > "caddy-${GOOS}-${GOARCH}.sha256"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: caddy-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+
+    outputs:
+      version: ${{ steps.caddy.outputs.version }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          gh release create "$VERSION" dist/* \
+            --title "Custom Caddy $VERSION" \
+            --notes "Custom Caddy build with Cloudflare DNS support." \
+            --repo "$GITHUB_REPOSITORY" \
+            || gh release upload "$VERSION" dist/* \
+              --clobber --repo "$GITHUB_REPOSITORY"
