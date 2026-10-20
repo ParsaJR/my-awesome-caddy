@@ -29,15 +29,11 @@ jobs:
           go-version: stable
           cache: false
 
-      - name: Download xcaddy
+      - name: Download & Intall xcaddy
         env:
           PATTERN: "xcaddy_*_linux_amd64.tar.gz"
           REPO: "caddyserver/xcaddy"
-          GH_TOKEN: ${{ github.token }}
-          
-        run: 
-        
-      - name: Install xcaddy
+          GH_TOKEN: ${{ github.token }}        
         run: |
           gh release download \
           --repo "$REPO" \
